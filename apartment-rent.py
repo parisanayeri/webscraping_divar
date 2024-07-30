@@ -84,6 +84,11 @@ try:
                 time.sleep(3)
 
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
+                
+                check = soup.select('.kt-page-title__title--responsive-sized')
+                if not check:
+                  continue
+                
                 info = soup.select('tr.kt-group-row__data-row td')
                 info2 = soup.select('p.kt-unexpandable-row__value')
                 title = soup.select('.kt-page-title__title--responsive-sized')[0].text

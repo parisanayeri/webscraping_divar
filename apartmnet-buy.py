@@ -87,10 +87,12 @@ try:
                 driver.get('https://divar.ir/v/-/' + token)
                 time.sleep(5)
 
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                
                 check = soup.select('.kt-page-title__title--responsive-sized')
                 if not check:
                   continue
-                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                
                 info = soup.select('tr.kt-group-row__data-row td')
                 info2 = soup.select('p.kt-unexpandable-row__value')
                 title = soup.select('.kt-page-title__title--responsive-sized')[0].text
