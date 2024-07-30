@@ -86,7 +86,7 @@ payload = {
 }
 
 try:
-    for i in range(1):  # Adjust the range for the number of pages you want to scrape
+    for i in range(20):  # Adjust the range for the number of pages you want to scrape
         payload['pagination_data']['last_post_date'] = last_post_date
         res = requests.post(url, json=payload, headers={"Content-type": "application/json"})
         res_json = res.json()
