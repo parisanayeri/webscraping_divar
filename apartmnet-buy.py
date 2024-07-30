@@ -87,11 +87,14 @@ try:
                 driver.get('https://divar.ir/v/-/' + token)
                 time.sleep(5)
 
+                check = soup.select('.kt-page-title__title--responsive-sized')
+                if not check:
+                  continue
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 info = soup.select('tr.kt-group-row__data-row td')
                 info2 = soup.select('p.kt-unexpandable-row__value')
                 title = soup.select('.kt-page-title__title--responsive-sized')[0].text
-                location = soup.select('.kt-page-title__subtitle--responsive-sized')[0].text                    
+                location = soup.select('.kt-page-title__subtitle--responsive-sized')[0].text                            
                 
                 gheimate_kol = convert_numbers.persian_to_english(info2[0].text.replace(' تومان', '').replace('٬', ''))
                 gheimate_har_metr = convert_numbers.persian_to_english(info2[1].text.replace(' تومان', '').replace('٬', ''))                
