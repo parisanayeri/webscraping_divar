@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException
 import time
 import datetime
-import convert_numbers
+from unidecode import unidecode
 
 # Specify the path to the ChromeDriver executable
 driver_path = 'C:\\chromedriver-win64\\chromedriver.exe'
@@ -30,6 +30,25 @@ mydb = mysql.connector.connect(
     database="divar"
 )
 mycursor = mydb.cursor(buffered=True)
+
+mycursor.execute('''
+  CREATE TABLE IF NOT EXISTS buyapartment (
+      token TEXT,
+      title TEXT,
+      location TEXT,
+      metraj TEXT,
+      sale_sakht TEXT,
+      otagh INTEGER,
+      asansor INTEGER,
+      anbari INTEGER,
+      parking INTEGER,
+      tabaghe INTEGER,
+      kolle_tabaghat INTEGER,
+      gheimate_kol TEXT,
+      gheimate_har_metr TEXT      
+  )
+'''
+)
 
 mycursor.execute('DELETE FROM buyapartment')
 mydb.commit()
@@ -88,7 +107,7 @@ try:
                 time.sleep(5)
 
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
-                
+
                 check = soup.select('.kt-page-title__title--responsive-sized')
                 if not check:
                   continue
@@ -98,17 +117,17 @@ try:
                 title = soup.select('.kt-page-title__title--responsive-sized')[0].text
                 location = soup.select('.kt-page-title__subtitle--responsive-sized')[0].text                            
                 
-                gheimate_kol = convert_numbers.persian_to_english(info2[0].text.replace(' تومان', '').replace('٬', ''))
-                gheimate_har_metr = convert_numbers.persian_to_english(info2[1].text.replace(' تومان', '').replace('٬', ''))                
+                gheimate_kol = unidecode(info2[0].text.replace(' تومان', '').replace('٬', ''))
+                gheimate_har_metr = unidecode(info2[1].text.replace(' تومان', '').replace('٬', ''))                
 
                 if gheimate_kol == '' or gheimate_har_metr == '':
                     continue
 
                 location = location.split(' پیش در ')[1] if ' پیش در ' in location else location
 
-                metraj = convert_numbers.persian_to_english(info[0].text)
-                sale_sakht = convert_numbers.persian_to_english(info[1].text)
-                otagh = convert_numbers.persian_to_english(info[2].text.replace('بدون اتاق', '0'))
+                metraj = unidecode(info[0].text)
+                sale_sakht = unidecode(info[1].text)
+                otagh = unidecode(info[2].text.replace('بدون اتاق', '0'))
                 if len(info) == 8:
                     asansor = '0' if 'ندارد' in info[5].text else '1'
                     parking = '0' if 'ندارد' in info[6].text else '1'
@@ -122,10 +141,10 @@ try:
                 tabaghe = info2[-1].text.replace('همکف', '0')
                 if ' از ' in tabaghe:
                     temp = tabaghe.split(' از ')
-                    kolle_tabaghat = convert_numbers.persian_to_english(temp[1])
-                    tabaghe = convert_numbers.persian_to_english(temp[0])
+                    kolle_tabaghat = unidecode(temp[1])
+                    tabaghe = unidecode(temp[0])
                 else:
-                    tabaghe = convert_numbers.persian_to_english(tabaghe)
+                    tabaghe = unidecode(tabaghe)
 
                 sql = "INSERT INTO buyapartment (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, gheimate_kol, gheimate_har_metr) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
                 mycursor.execute(sql, (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, gheimate_kol, gheimate_har_metr))

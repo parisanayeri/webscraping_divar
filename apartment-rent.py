@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException
 import time
 import datetime
-import convert_numbers
+from unidecode import unidecode
 
 # Specify the path to the ChromeDriver executable
 driver_path = 'C:\\chromedriver-win64\\chromedriver.exe'
@@ -119,8 +119,9 @@ try:
                 if convert_slider:
                     vadie_ejare = "قابل تبدیل"
 
-                    vadie = soup.select('.convert-slider__info .convert-slider__info-right .convert-slider__value')[0].text
-                    temp = convert_numbers.persian_to_english(vadie)
+                    vadie = soup.select('.convert-slider__info .convert-slider__info-right .convert-slider__value')[0].text                                                                                    
+                    vadie_temp = vadie.replace(' ','').replace('میلیون','').replace('میلیارد','').replace('هزار','')
+                    temp = unidecode(vadie_temp)
                     if 'میلیون' in vadie:
                         vadie = str(int(float(temp) * 1000000))
                     elif 'میلیارد' in vadie:
@@ -131,7 +132,8 @@ try:
                     ejare = soup.select('.convert-slider__info .convert-slider__info-right .convert-slider__value')
                     if len(ejare) >= 2:
                         ejare = ejare[1].text
-                        temp = convert_numbers.persian_to_english(ejare)
+                        ejare_temp = ejare.replace(' ','').replace('میلیون','').replace('میلیارد','').replace('هزار','')
+                        temp = unidecode(ejare_temp)
                         if 'میلیون' in ejare:
                             ejare = str(int(float(temp) * 1000000))
                         elif 'میلیارد' in ejare:
@@ -142,8 +144,8 @@ try:
                         ejare = '0'
 
                 else:
-                    vadie = convert_numbers.persian_to_english(info2[0].text.replace(' تومان', '').replace('٬', ''))
-                    ejare = '0' if 'مجانی' in info2[1].text else convert_numbers.persian_to_english(info2[1].text.replace(' تومان', '').replace('٬', ''))
+                    vadie = unidecode(info2[0].text.replace(' تومان', '').replace('٬', ''))
+                    ejare = '0' if 'مجانی' in info2[1].text else unidecode(info2[1].text.replace(' تومان', '').replace('٬', ''))
                     vadie_ejare = info2[2].text
 
                 if vadie == '' or ejare == '':
@@ -151,9 +153,9 @@ try:
 
                 location = location.split(' پیش در ')[1] if ' پیش در ' in location else location
 
-                metraj = convert_numbers.persian_to_english(info[0].text)
-                sale_sakht = convert_numbers.persian_to_english(info[1].text)
-                otagh = convert_numbers.persian_to_english(info[2].text.replace('بدون اتاق', '0'))
+                metraj = unidecode(info[0].text)
+                sale_sakht = unidecode(info[1].text)
+                otagh = unidecode(info[2].text.replace('بدون اتاق', '0'))
                 if len(info) == 8:
                     asansor = '0' if 'ندارد' in info[5].text else '1'
                     parking = '0' if 'ندارد' in info[6].text else '1'
@@ -167,10 +169,10 @@ try:
                 tabaghe = info2[-1].text.replace('همکف', '0')
                 if ' از ' in tabaghe:
                     temp = tabaghe.split(' از ')
-                    kolle_tabaghat = convert_numbers.persian_to_english(temp[1])
-                    tabaghe = convert_numbers.persian_to_english(temp[0])
+                    kolle_tabaghat = unidecode(temp[1])
+                    tabaghe = unidecode(temp[0])
                 else:
-                    tabaghe = convert_numbers.persian_to_english(tabaghe)
+                    tabaghe = unidecode(tabaghe)
 
                 vadie_calc = int(vadie)
                 if int(ejare) > 0:
