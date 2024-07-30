@@ -31,6 +31,28 @@ mydb = mysql.connector.connect(
 )
 mycursor = mydb.cursor(buffered=True)
 
+mycursor.execute('''
+  CREATE TABLE IF NOT EXISTS rentapartment (
+      token TEXT,
+      title TEXT,
+      location TEXT,
+      metraj TEXT,
+      sale_sakht TEXT,
+      otagh INTEGER,
+      asansor INTEGER,
+      anbari INTEGER,
+      parking INTEGER,
+      tabaghe INTEGER,
+      kolle_tabaghat INTEGER,
+      vadie TEXT,
+      ejare TEXT,
+      vadie_ejare TEXT,
+      vadie_calc TEXT
+  )
+'''
+)
+
+
 mycursor.execute('DELETE FROM rentapartment')
 mydb.commit()
 
@@ -88,7 +110,7 @@ try:
                 check = soup.select('.kt-page-title__title--responsive-sized')
                 if not check:
                   continue
-                
+
                 info = soup.select('tr.kt-group-row__data-row td')
                 info2 = soup.select('p.kt-unexpandable-row__value')
                 title = soup.select('.kt-page-title__title--responsive-sized')[0].text
@@ -151,8 +173,12 @@ try:
                 else:
                     tabaghe = convert_numbers.persian_to_english(tabaghe)
 
-                sql = "INSERT INTO rentapartment (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, vadie, ejare, vadie_ejare) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                mycursor.execute(sql, (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, vadie, ejare, vadie_ejare))
+                vadie_calc = vadie
+                if ejare > 0:
+                    vadie_calc = vadie_calc + ((ejare / 30000) * 1000000)
+
+                sql = "INSERT INTO rentapartment (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, vadie, ejare, vadie_ejare , vadie_calc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                mycursor.execute(sql, (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, vadie, ejare, vadie_ejare ,vadie_calc))
                 mydb.commit()
 
 except WebDriverException as e:
