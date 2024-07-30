@@ -52,7 +52,6 @@ mycursor.execute('''
 '''
 )
 
-
 mycursor.execute('DELETE FROM rentapartment')
 mydb.commit()
 
@@ -87,7 +86,7 @@ payload = {
 }
 
 try:
-    for i in range(20):  # Adjust the range for the number of pages you want to scrape
+    for i in range(1):  # Adjust the range for the number of pages you want to scrape
         payload['pagination_data']['last_post_date'] = last_post_date
         res = requests.post(url, json=payload, headers={"Content-type": "application/json"})
         res_json = res.json()
@@ -173,12 +172,12 @@ try:
                 else:
                     tabaghe = convert_numbers.persian_to_english(tabaghe)
 
-                vadie_calc = vadie
-                if ejare > 0:
-                    vadie_calc = vadie_calc + ((ejare / 30000) * 1000000)
+                vadie_calc = int(vadie)
+                if int(ejare) > 0:
+                    vadie_calc = round(int(vadie_calc + ((int(ejare) / 30000) * 1000000)),-5)
 
                 sql = "INSERT INTO rentapartment (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, vadie, ejare, vadie_ejare , vadie_calc) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                mycursor.execute(sql, (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, vadie, ejare, vadie_ejare ,vadie_calc))
+                mycursor.execute(sql, (token, title, location, metraj, sale_sakht, otagh, asansor, anbari, parking, tabaghe, kolle_tabaghat, vadie, ejare, vadie_ejare ,str(vadie_calc)))
                 mydb.commit()
 
 except WebDriverException as e:
