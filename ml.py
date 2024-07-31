@@ -1,14 +1,13 @@
 import pandas as pd
 import mysql.connector
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error ,mean_squared_error , r2_score , accuracy_score
+from sklearn.metrics import mean_absolute_error ,root_mean_squared_error , r2_score , accuracy_score
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.linear_model import LinearRegression , LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import  SVC
-from sqlalchemy import create_engine
 
 username = 'root'
 password = ''
@@ -49,30 +48,26 @@ conn.commit()
 #Upload Data
 query = "SELECT * FROM buyapartment"
 Table = pd.read_sql_query(query,conn)
+Table = Table.drop(['gheimate_har_metr'] , axis=1)
 
 #create a dataframe for classifier models
 Table_cat = Table.copy()
-Table_cat['gheimate_kol'] =  Table_cat['gheimate_kol'].apply(lambda x: 'upper 500' if int(x) > 500000000 else 'lower 500')
+Table_cat['gheimate_kol'] =  Table_cat['gheimate_kol'].apply(lambda x: 'upper 500' if x > 500000000 else 'lower 500')
 
 #create a correlation matrix
-corr  = pd.DataFrame.corr(Table)
+corr  = Table.corr(numeric_only=True)
 corr.to_excel('corr.xlsx')
 
 #function for show result from DB
 def showResult():
   query = 'SELECT * FROM results ORDER BY table_name , type ,  R2 DESC, MAE ASC , ACC'
-  connection_string = f'mysql+mysqlclient://{username}:{password}@{hostname}/{database}'
-  engine = create_engine(connection_string)
-  df = pd.read_sql_query(query, engine)
-  df.to_excel('result.xlsx')
+  result = pd.read_sql_query(query,conn)
+  result.to_excel('result.xlsx') 
 
-  engine.dispose()
-
-def insertDB(table_name,type, model, test_size, standard,normal, dropColumns, factorize, dummies,MAE , RMSE, R2, ACC):
-
+def insertDB(table_name,type, model, test_size, standard,normal, dropColumns, factorize, dummies,MAE,RMSE, R2, ACC):
   insert_query = '''
-    INSERT INTO results (table_name, type, model, test_size, standard,normal, dropColumns, factorize, dummies,MAE,RMSE, R2, ACC)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ? , ?)
+    INSERT INTO results (table_name,type, model, test_size, standard,normal, dropColumns, factorize, dummies,MAE,RMSE, R2, ACC)
+    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
   '''
   c.execute(insert_query, (table_name,type, model, test_size, standard,normal, dropColumns, factorize, dummies,MAE,RMSE, R2, ACC))
 
@@ -118,7 +113,6 @@ def testTables(MainTable,ycol, test_size=0.4, selectedModel='LinearRegression',s
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=10)
 
-
     if selectedModel == 'LinearRegression':
       Model = LinearRegression()
     elif selectedModel == 'RandomForestRegressor':
@@ -140,7 +134,7 @@ def testTables(MainTable,ycol, test_size=0.4, selectedModel='LinearRegression',s
     MAE,R2,ACC,RMSE = 'none','none','none', 'none'
     if selectedModel in ['LinearRegression','RandomForestRegressor','DecisionTreeRegressor']:
       MAE = mean_absolute_error(y_test, y_pred_test)
-      RMSE = mean_squared_error(y_test, y_pred_test , squared = False)
+      RMSE = root_mean_squared_error(y_test, y_pred_test)
       R2 = r2_score(y_test, y_pred_test)
       type = 'Regressor'
     else:
@@ -149,19 +143,22 @@ def testTables(MainTable,ycol, test_size=0.4, selectedModel='LinearRegression',s
 
     dropColumns_text = '_'.join(dropColumns)
     
-    insertDB('boston',type,selectedModel,test_size,standard,normal,dropColumns_text,factorize,dummies,MAE,RMSE,R2,ACC)
+    insertDB('divar_buyappartment',type,selectedModel,test_size,standard,normal,dropColumns_text,factorize,dummies,MAE,RMSE,R2,ACC)
 
 
 models = ['LinearRegression','RandomForestRegressor','DecisionTreeRegressor']
 test_size = [0.4,0.5]
 for model in models:
-  for test in test_size:   
-    testTables(Table,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=[],factorize = False , dummies = False)
-    testTables(Table,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=[],factorize = False , dummies = False)   
+  for test in test_size:       
     testTables(Table,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=[],factorize = True , dummies = False)
     testTables(Table,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=[],factorize = True , dummies = False)   
     testTables(Table,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=[],factorize = False , dummies = True)
     testTables(Table,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=[],factorize = False , dummies = True)
+
+    testTables(Table,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=['otagh'],factorize = True , dummies = False)
+    testTables(Table,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=['otagh'],factorize = True , dummies = False)   
+    testTables(Table,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=['otagh'],factorize = False , dummies = True)
+    testTables(Table,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=['otagh'],factorize = False , dummies = True)
 
 
 models = ['LogisticRegression','DecisionTreeClassifier','SVC']
@@ -172,5 +169,9 @@ for model in models:
     testTables(Table_cat,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=[],factorize = True , dummies = False)
     testTables(Table_cat,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=[],factorize = False , dummies = True)
     testTables(Table_cat,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=[],factorize = False , dummies = True)
+    testTables(Table_cat,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=['otagh'],factorize = True , dummies = False)
+    testTables(Table_cat,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=['otagh'],factorize = True , dummies = False)   
+    testTables(Table_cat,'gheimate_kol', test, model,standard=False, normal=True, dropColumns=['otagh'],factorize = False , dummies = True)
+    testTables(Table_cat,'gheimate_kol', test, model,standard=True, normal=False, dropColumns=['otagh'],factorize = False , dummies = True)
 
 showResult()
