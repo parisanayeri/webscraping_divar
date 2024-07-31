@@ -145,7 +145,7 @@ try:
 
                 else:
                     vadie = unidecode(info2[0].text.replace(' تومان', '').replace('٬', ''))
-                    ejare = '0' if 'مجانی' in info2[1].text else unidecode(info2[1].text.replace(' تومان', '').replace('٬', ''))
+                    ejare = '0' if 'مجانی' or 'توافقی' in info2[1].text else unidecode(info2[1].text.replace(' تومان', '').replace('٬', ''))
                     vadie_ejare = info2[2].text
 
                 if vadie == '' or ejare == '':
